@@ -143,6 +143,7 @@ namespace FastConsoleUI
         /// <param name="parent">Parent</param>
         public InputField(IConsoleUI parent) : base(parent)
         {
+            Height = 1;
             OnKeyPressed += KeyPressedEvent;
         }
 
@@ -386,13 +387,12 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        public override void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        public override void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle)
         {
             if (buffer != null)
             {
-                ConsoleUIUtils.WriteHighlightedText((Text.Length > 0) ? Text : Hint, TextAlignment, (Text.Length > 0) ? ForegroundColor : HintForegroundColor, (Text.Length > 0) ? BackgroundColor : HintBackgroundColor, SelectionForegroundColor, SelectionBackgroundColor, SelectionPosition, Math.Max(SelectionSize, 1U), buffer, position, size);
+                ConsoleUIUtils.WriteHighlightedText((Text.Length > 0) ? Text : Hint, TextAlignment, (Text.Length > 0) ? ForegroundColor : HintForegroundColor, (Text.Length > 0) ? BackgroundColor : HintBackgroundColor, SelectionForegroundColor, SelectionBackgroundColor, SelectionPosition, Math.Max(SelectionSize, 1U), AllowTransparency, buffer, rectangle);
             }
         }
 

@@ -194,9 +194,8 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        public override void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        public override void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle)
         {
             if ((lastForegroundColor != ForegroundColor) || (lastBackgroundColor != BackgroundColor) || (lastSelectionForegroundColor != SelectionForegroundColor) || (lastSelectionBackgroundColor != SelectionBackgroundColor))
             {
@@ -206,7 +205,7 @@ namespace FastConsoleUI
                 lastSelectionBackgroundColor = SelectionBackgroundColor;
                 BuildCellsLines();
             }
-            ConsoleUIUtils.WriteCellsLines(cellsLines, TextAlignment, ForegroundColor, BackgroundColor, buffer, position, size);
+            ConsoleUIUtils.WriteCellsLines(cellsLines, TextAlignment, ForegroundColor, BackgroundColor, AllowTransparency, buffer, rectangle);
         }
     }
 }

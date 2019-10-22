@@ -12,6 +12,11 @@ namespace FastConsoleUI
     public interface IConsoleUI
     {
         /// <summary>
+        /// Rectangle
+        /// </summary>
+        RectInt Rectangle { get; set; }
+
+        /// <summary>
         /// Position
         /// </summary>
         Vector2Int Position { get; set; }
@@ -20,6 +25,26 @@ namespace FastConsoleUI
         /// Size
         /// </summary>
         Vector2Int Size { get; set; }
+
+        /// <summary>
+        /// X
+        /// </summary>
+        int X { get; set; }
+
+        /// <summary>
+        /// Y
+        /// </summary>
+        int Y { get; set; }
+
+        /// <summary>
+        /// Width
+        /// </summary>
+        int Width { get; set; }
+
+        /// <summary>
+        /// Height
+        /// </summary>
+        int Height { get; set; }
 
         /// <summary>
         /// Foreground color
@@ -65,10 +90,29 @@ namespace FastConsoleUI
         /// Add control
         /// </summary>
         /// <typeparam name="T">Control type</typeparam>
+        /// <param name="rectangle">Rectangle</param>
+        /// <returns>Control</returns>
+        T AddControl<T>(RectInt rectangle) where T : IConsoleUIControl;
+
+        /// <summary>
+        /// Add control
+        /// </summary>
+        /// <typeparam name="T">Control type</typeparam>
         /// <param name="position">Position</param>
         /// <param name="size">Size</param>
         /// <returns>Control</returns>
         T AddControl<T>(Vector2Int position, Vector2Int size) where T : IConsoleUIControl;
+
+        /// <summary>
+        /// Add control
+        /// </summary>
+        /// <typeparam name="T">Control type</typeparam>
+        /// <param name="x">X</param>
+        /// <param name="y">Y</param>
+        /// <param name="width">Width</param>
+        /// <param name="height">Height</param>
+        /// <returns>Control</returns>
+        T AddControl<T>(int x, int y, int width, int height) where T : IConsoleUIControl;
 
         /// <summary>
         /// Remove control

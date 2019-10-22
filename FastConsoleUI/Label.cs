@@ -49,13 +49,12 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        public override void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        public override void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle)
         {
             if (buffer != null)
             {
-                ConsoleUIUtils.WriteText(text, TextAlignment, ForegroundColor, BackgroundColor, buffer, position, size);
+                ConsoleUIUtils.WriteText(text, TextAlignment, ForegroundColor, BackgroundColor, AllowTransparency, buffer, rectangle);
             }
         }
     }

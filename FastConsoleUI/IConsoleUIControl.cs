@@ -24,6 +24,11 @@ namespace FastConsoleUI
         bool IsEnabled { get; set; }
 
         /// <summary>
+        /// Allow transparency
+        /// </summary>
+        bool AllowTransparency { get; set; }
+
+        /// <summary>
         /// Text alignment
         /// </summary>
         ETextAlignment TextAlignment { get; set; }
@@ -32,8 +37,7 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size);
+        /// <param name="rectangle">Rectangle</param>
+        void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle);
     }
 }

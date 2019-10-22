@@ -108,12 +108,11 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        public override void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        public override void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle)
         {
-            ConsoleUIUtils.WriteBorder(ForegroundColor, BackgroundColor, BorderStyle, IsTopOpen, IsBottomOpen, IsLeftOpen, IsRightOpen, buffer, position, size);
-            ConsoleUIUtils.WriteText(Text, TextAlignment, TextForegroundColor, TextBackgroundColor, buffer, position + Vector2Int.one, Vector2Int.Max(size - Vector2Int.one, Vector2Int.zero));
+            ConsoleUIUtils.WriteBorder(ForegroundColor, BackgroundColor, BorderStyle, IsTopOpen, IsBottomOpen, IsLeftOpen, IsRightOpen, AllowTransparency, buffer, rectangle);
+            ConsoleUIUtils.WriteText(Text, TextAlignment, TextForegroundColor, TextBackgroundColor, AllowTransparency, buffer, new RectInt(rectangle.Position + Vector2Int.one, Vector2Int.Max(rectangle.Size - Vector2Int.one, Vector2Int.zero)));
         }
     }
 }

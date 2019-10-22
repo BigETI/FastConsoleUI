@@ -21,6 +21,11 @@ namespace FastConsoleUI
         public static readonly Vector2Int one = new Vector2Int(1, 1);
 
         /// <summary>
+        /// Two vector
+        /// </summary>
+        public static readonly Vector2Int two = new Vector2Int(2, 2);
+
+        /// <summary>
         /// Up vector
         /// </summary>
         public static readonly Vector2Int up = new Vector2Int(0, -1);
@@ -62,6 +67,13 @@ namespace FastConsoleUI
         }
 
         /// <summary>
+        /// Get absolute of given vector
+        /// </summary>
+        /// <param name="vector">Vector</param>
+        /// <returns>Absolute of given vector</returns>
+        public static Vector2Int Abs(Vector2Int vector) => new Vector2Int(Math.Abs(vector.X), Math.Abs(vector.Y));
+
+        /// <summary>
         /// Minimum
         /// </summary>
         /// <param name="left">Left</param>
@@ -83,8 +95,52 @@ namespace FastConsoleUI
         /// <param name="vector">Vector</param>
         /// <param name="minimum">Minimum</param>
         /// <param name="maximum">Maximum</param>
-        /// <returns></returns>
+        /// <returns>Clamped result</returns>
         public static Vector2Int Clamp(Vector2Int vector, Vector2Int minimum, Vector2Int maximum) => Min(Max(vector, minimum), maximum);
+
+        /// <summary>
+        /// Equals
+        /// </summary>
+        /// <param name="other">Other</param>
+        /// <returns>"true" if equivalent, otherwise "false"</returns>
+        public bool Equals(Vector2Int other) => (this == other);
+
+        /// <summary>
+        /// Compare to
+        /// </summary>
+        /// <param name="other">Other</param>
+        /// <returns>Comparison result</returns>
+        public int CompareTo(Vector2Int other)
+        {
+            int ret = X.CompareTo(other.X);
+            if (ret == 0)
+            {
+                ret = Y.CompareTo(other.Y);
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Equals
+        /// </summary>
+        /// <param name="obj">Object</param>
+        /// <returns>"true" if equivalent, otherwise "false"</returns>
+        public override bool Equals(object obj)
+        {
+            return ((obj is Vector2Int) ? (this == (Vector2Int)obj) : false);
+        }
+
+        /// <summary>
+        /// To string
+        /// </summary>
+        /// <returns>String representation</returns>
+        public override string ToString() => "( " + X + "; " + Y + " )";
+
+        /// <summary>
+        /// Get hash code
+        /// </summary>
+        /// <returns>Hash code</returns>
+        public override int GetHashCode() => ToString().GetHashCode();
 
         /// <summary>
         /// Add operator
@@ -140,49 +196,5 @@ namespace FastConsoleUI
         /// <param name="right">Right</param>
         /// <returns>"true" if not equivalent, otherwise "false"</returns>
         public static bool operator !=(Vector2Int left, Vector2Int right) => ((left.X != right.X) || (left.Y != right.Y));
-
-        /// <summary>
-        /// Equals
-        /// </summary>
-        /// <param name="other">Other</param>
-        /// <returns>"true" if equivalent, otherwise "false"</returns>
-        public bool Equals(Vector2Int other) => (left == right);
-
-        /// <summary>
-        /// Compare to
-        /// </summary>
-        /// <param name="other">Other</param>
-        /// <returns>COmparison result</returns>
-        public int CompareTo(Vector2Int other)
-        {
-            int ret = X.CompareTo(other.X);
-            if (ret == 0)
-            {
-                ret = Y.CompareTo(other.Y);
-            }
-            return ret;
-        }
-
-        /// <summary>
-        /// Equals
-        /// </summary>
-        /// <param name="obj">Object</param>
-        /// <returns>"true" if equivalent, otherwise "false"</returns>
-        public override bool Equals(object obj)
-        {
-            return ((obj is Vector2Int) ? (this == (Vector2Int)obj) : false);
-        }
-
-        /// <summary>
-        /// To string
-        /// </summary>
-        /// <returns>String representation</returns>
-        public override string ToString() => "( " + X + "; " + Y + " )";
-
-        /// <summary>
-        /// Get hash code
-        /// </summary>
-        /// <returns>Hash code</returns>
-        public override int GetHashCode() => ToString().GetHashCode();
     }
 }

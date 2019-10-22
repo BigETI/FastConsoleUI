@@ -46,14 +46,16 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        public override void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        public override void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle)
         {
-            ConsoleUIUtils.WriteBorder(ForegroundColor, BackgroundColor, BorderStyle, IsTopOpen, IsBottomOpen, IsLeftOpen, IsRightOpen, buffer, position, Vector2Int.Min(Size, size));
+            ConsoleUIUtils.WriteBorder(ForegroundColor, BackgroundColor, BorderStyle, IsTopOpen, IsBottomOpen, IsLeftOpen, IsRightOpen, AllowTransparency, buffer, new RectInt(rectangle.Position, Vector2Int.Min(Size, rectangle.Size)));
             foreach (IConsoleUIControl control in Controls)
             {
                 if (control.IsVisible)
                 {
-                    control.WriteToBuffer(buffer, position + control.Position + Vector2Int.one, Vector2Int.Max(Vector2Int.Min(control.Size, size - Vector2Int.one), Vector2Int.zero));
+                    RectInt intersection = RectInt.GetIntersection(new RectInt(rectangle.Position + control.Position + Vector2Int.one, control.Size), new RectInt(rectangle.Position + Vector2Int.one, rectangle.Size - Vector2Int.two));
+                    control.WriteToBuffer(buffer, intersection);
                 }
             }
         }

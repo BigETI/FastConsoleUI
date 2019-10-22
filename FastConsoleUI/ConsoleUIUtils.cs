@@ -17,20 +17,24 @@ namespace FastConsoleUI
         /// For loop
         /// </summary>
         /// <param name="bufferSize">Buffer size</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
+        /// <param name="rectangle">Rectangle</param>
         /// <param name="body">Body</param>
-        private static void For(Vector2Int bufferSize, Vector2Int position, Vector2Int size, Action<int, int> body)
+        private static void For(Vector2Int bufferSize, RectInt rectangle, Action<int, int> body)
         {
-            Vector2Int startIndex = Vector2Int.Max(-position, Vector2Int.zero);
-            Vector2Int clamped_size = size - Vector2Int.Max(position + size - bufferSize, Vector2Int.zero);
-            Parallel.For(startIndex.Y, clamped_size.Y, (y) =>
+            Vector2Int start_index = Vector2Int.Max(-rectangle.Position, Vector2Int.zero);
+            //Vector2Int clamped_size = size - Vector2Int.Max(position + size - bufferSize, Vector2Int.zero);
+            //RectInt rect = new RectInt();
+            RectInt intersection = RectInt.GetIntersection(new RectInt(Vector2Int.zero, bufferSize), rectangle);
+            if (intersection.Size != Vector2Int.zero)
             {
-                for (int x = startIndex.X; x < clamped_size.X; x++)
+                Parallel.For(0, intersection.Height, (y) =>
                 {
-                    body(x, y);
-                }
-            });
+                    for (int x = 0; x < intersection.Width; x++)
+                    {
+                        body(start_index.X + x, start_index.Y + y);
+                    }
+                });
+            }
         }
 
         /// <summary>
@@ -39,14 +43,13 @@ namespace FastConsoleUI
         /// <param name="foregroundColor">Foreground color</param>
         /// <param name="backgroundColor">Background color</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void ClearBuffer(ConsoleColor foregroundColor, ConsoleColor backgroundColor, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void ClearBuffer(ConsoleColor foregroundColor, ConsoleColor backgroundColor, BufferCell[,] buffer, RectInt rectangle)
         {
-            BufferCell cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, size, (x, y) =>
+            BufferCell empty_cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), rectangle, (x, y) =>
             {
-                buffer[position.X + x, position.Y + y] = cell;
+                buffer[rectangle.X + x, rectangle.Y + y] = empty_cell;
             });
         }
 
@@ -57,50 +60,54 @@ namespace FastConsoleUI
         /// <param name="textAlignment">Text alignment</param>
         /// <param name="foregroundColor">Foreground color</param>
         /// <param name="backgroundColor">Background color</param>
+        /// <param name="allowTransparency">Allow transparency</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void WriteText(string text, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void WriteText(string text, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool allowTransparency, BufferCell[,] buffer, RectInt rectangle)
         {
-            BufferCell cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, size, (x, y) =>
+            BufferCell empty_cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), rectangle, (x, y) =>
             {
                 bool show = true;
                 int index = x;
                 switch (textAlignment)
                 {
                     case ETextAlignment.TopCenter:
-                        index = x - ((size.X - text.Length) / 2);
+                        index = x - ((rectangle.Width - text.Length) / 2);
                         show = (y == 0);
                         break;
                     case ETextAlignment.TopRight:
-                        index = x - (size.X - text.Length);
+                        index = x - (rectangle.Width - text.Length);
                         show = (y == 0);
                         break;
                     case ETextAlignment.CenterLeft:
-                        show = (y == (size.Y / 2));
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.Center:
-                        index = x - ((size.X - text.Length) / 2);
-                        show = (y == (size.Y / 2));
+                        index = x - ((rectangle.Width - text.Length) / 2);
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.CenterRight:
-                        index = x - (size.X - text.Length);
-                        show = (y == (size.Y / 2));
+                        index = x - (rectangle.Width - text.Length);
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.BottomLeft:
-                        show = (y == (size.Y - 1));
+                        show = (y == (rectangle.Height - 1));
                         break;
                     case ETextAlignment.BottomCenter:
-                        index = x - ((size.X - text.Length) / 2);
-                        show = (y == (size.Y - 1));
+                        index = x - ((rectangle.Width - text.Length) / 2);
+                        show = (y == (rectangle.Height - 1));
                         break;
                     case ETextAlignment.BottomRight:
-                        index = x - (size.X - text.Length);
-                        show = (y == (size.Y - 1));
+                        index = x - (rectangle.Width - text.Length);
+                        show = (y == (rectangle.Height - 1));
                         break;
                 }
-                buffer[position.X + x, position.Y + y] = (show ? (((index < 0) || (index >= text.Length)) ? cell : new BufferCell(text[index], foregroundColor, backgroundColor)) : cell);
+                BufferCell cell = (show ? (((index < 0) || (index >= text.Length)) ? empty_cell : new BufferCell(text[index], foregroundColor, backgroundColor)) : empty_cell);
+                if ((cell.Character != BufferCell.empty.Character) || (!allowTransparency))
+                {
+                    buffer[rectangle.X + x, rectangle.Y + y] = cell;
+                }
             });
         }
 
@@ -111,13 +118,13 @@ namespace FastConsoleUI
         /// <param name="textAlignment">Text alignment</param>
         /// <param name="foregroundColor">Foreground color</param>
         /// <param name="backgroundColor">Background color</param>
+        /// <param name="allowTransparency">Allow transparency</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void WriteTextLines(IReadOnlyList<string> textLines, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void WriteTextLines(IReadOnlyList<string> textLines, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool allowTransparency, BufferCell[,] buffer, RectInt rectangle)
         {
-            BufferCell cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, size, (x, y) =>
+            BufferCell empty_cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), rectangle, (x, y) =>
             {
                 int row = y;
                 int index = x;
@@ -132,13 +139,13 @@ namespace FastConsoleUI
                     case ETextAlignment.CenterLeft:
                     case ETextAlignment.Center:
                     case ETextAlignment.CenterRight:
-                        row = y - ((size.Y - textLines.Count) / 2);
+                        row = y - ((rectangle.Height - textLines.Count) / 2);
                         text = (((row < 0) || (row >= textLines.Count)) ? string.Empty : ((textLines[row] == null) ? string.Empty : textLines[row]));
                         break;
                     case ETextAlignment.BottomLeft:
                     case ETextAlignment.BottomCenter:
                     case ETextAlignment.BottomRight:
-                        row = y - (size.Y - textLines.Count);
+                        row = y - (rectangle.Height - textLines.Count);
                         text = (((row < 0) || (row >= textLines.Count)) ? string.Empty : ((textLines[row] == null) ? string.Empty : textLines[row]));
                         break;
                 }
@@ -147,15 +154,19 @@ namespace FastConsoleUI
                     case ETextAlignment.TopCenter:
                     case ETextAlignment.Center:
                     case ETextAlignment.BottomCenter:
-                        index = x - ((size.X - text.Length) / 2);
+                        index = x - ((rectangle.Width - text.Length) / 2);
                         break;
                     case ETextAlignment.TopRight:
                     case ETextAlignment.CenterRight:
                     case ETextAlignment.BottomRight:
-                        index = x - (size.X - text.Length);
+                        index = x - (rectangle.Width - text.Length);
                         break;
                 }
-                buffer[position.X + x, position.Y + y] = (((index < 0) || (index >= text.Length)) ? cell : new BufferCell(text[index], foregroundColor, backgroundColor));
+                BufferCell cell = (((index < 0) || (index >= text.Length)) ? empty_cell : new BufferCell(text[index], foregroundColor, backgroundColor));
+                if ((cell.Character != BufferCell.empty.Character) || (!allowTransparency))
+                {
+                    buffer[rectangle.X + x, rectangle.Y + y] = cell;
+                }
             });
         }
 
@@ -170,14 +181,14 @@ namespace FastConsoleUI
         /// <param name="highlightBackgroundColor">Highlight background color</param>
         /// <param name="startHighlight">Start highlight</param>
         /// <param name="highlightSize">Highlight size</param>
+        /// <param name="allowTransparency">Allow transparency</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void WriteHighlightedText(string text, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, ConsoleColor highlightForegroundColor, ConsoleColor highlightBackgroundColor, uint startHighlight, uint highlightSize, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void WriteHighlightedText(string text, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, ConsoleColor highlightForegroundColor, ConsoleColor highlightBackgroundColor, uint startHighlight, uint highlightSize, bool allowTransparency, BufferCell[,] buffer, RectInt rectangle)
         {
-            BufferCell cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
-            BufferCell highlighted_cell = new BufferCell(BufferCell.empty.Character, highlightForegroundColor, highlightBackgroundColor);
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, new Vector2Int(size.X, Math.Min(size.Y, 1)), (x, y) =>
+            BufferCell empty_cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
+            BufferCell highlighted_empty_cell = new BufferCell(BufferCell.empty.Character, highlightForegroundColor, highlightBackgroundColor);
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), new RectInt(rectangle.X, rectangle.Y, rectangle.Width, Math.Min(rectangle.Height, 1)), (x, y) =>
             {
                 bool show = true;
                 int index = x;
@@ -185,37 +196,41 @@ namespace FastConsoleUI
                 switch (textAlignment)
                 {
                     case ETextAlignment.TopCenter:
-                        index = x - ((size.X - text.Length) / 2);
+                        index = x - ((rectangle.Width - text.Length) / 2);
                         show = (y == 0);
                         break;
                     case ETextAlignment.TopRight:
-                        index = x - (size.X - text.Length);
+                        index = x - (rectangle.Width - text.Length);
                         show = (y == 0);
                         break;
                     case ETextAlignment.CenterLeft:
-                        show = (y == (size.Y / 2));
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.Center:
-                        index = x - ((size.X - text.Length) / 2);
-                        show = (y == (size.Y / 2));
+                        index = x - ((rectangle.Width - text.Length) / 2);
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.CenterRight:
-                        index = x - (size.X - text.Length);
-                        show = (y == (size.Y / 2));
+                        index = x - (rectangle.Width - text.Length);
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.BottomLeft:
-                        show = (y == (size.Y - 1));
+                        show = (y == (rectangle.Height - 1));
                         break;
                     case ETextAlignment.BottomCenter:
-                        index = x - ((size.X - text.Length) / 2);
-                        show = (y == (size.Y - 1));
+                        index = x - ((rectangle.Width - text.Length) / 2);
+                        show = (y == (rectangle.Height - 1));
                         break;
                     case ETextAlignment.BottomRight:
-                        index = x - (size.X - text.Length);
-                        show = (y == (size.Y - 1));
+                        index = x - (rectangle.Width - text.Length);
+                        show = (y == (rectangle.Height - 1));
                         break;
                 }
-                buffer[position.X + x, position.Y + y] = (show ? (((index < 0) || (index >= text.Length)) ? (highlight ? highlighted_cell : cell) : new BufferCell(text[index], highlight ? highlightForegroundColor : foregroundColor, highlight ? highlightBackgroundColor : backgroundColor)) : cell);
+                BufferCell cell = (show ? (((index < 0) || (index >= text.Length)) ? (highlight ? highlighted_empty_cell : empty_cell) : new BufferCell(text[index], highlight ? highlightForegroundColor : foregroundColor, highlight ? highlightBackgroundColor : backgroundColor)) : empty_cell);
+                if ((cell.Character != BufferCell.empty.Character) || (!allowTransparency))
+                {
+                    buffer[rectangle.X + x, rectangle.Y + y] = cell;
+                }
             });
         }
 
@@ -230,16 +245,16 @@ namespace FastConsoleUI
         /// <param name="isLeftOpen">Is left open</param>
         /// <param name="isRightOpen">Is right open</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void WriteBorder(ConsoleColor foregroundColor, ConsoleColor backgroundColor, BorderStyle borderStyle, bool isTopOpen, bool isBottomOpen, bool isLeftOpen, bool isRightOpen, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void WriteBorder(ConsoleColor foregroundColor, ConsoleColor backgroundColor, BorderStyle borderStyle, bool isTopOpen, bool isBottomOpen, bool isLeftOpen, bool isRightOpen, bool allowTransparency, BufferCell[,] buffer, RectInt rectangle)
         {
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, size, (x, y) =>
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), rectangle, (x, y) =>
             {
-                ref BufferCell cell = ref buffer[position.X + x, position.Y + y];
-                cell.ForegroundColor = foregroundColor;
-                cell.BackgroundColor = backgroundColor;
-                cell.Character = (x <= 0) ? ((y <= 0) ? (isTopOpen ? (isLeftOpen ? borderStyle.Cross : borderStyle.LeftMiddleCorner) : (isLeftOpen ? borderStyle.TopMiddleCorner : borderStyle.TopLeftCorner)) : (((y + 1) >= size.Y) ? (isBottomOpen ? (isLeftOpen ? borderStyle.Cross : borderStyle.LeftMiddleCorner) : (isLeftOpen ? borderStyle.BottomMiddleCorner : borderStyle.BottomLeftCorner)) : borderStyle.LeftSide)) : (((x + 1) >= size.X) ? ((y <= 0) ? (isTopOpen ? (isRightOpen ? borderStyle.Cross : borderStyle.RightMiddleCorner) : (isRightOpen ? borderStyle.TopMiddleCorner : borderStyle.TopRightCorner)) : (((y + 1) >= size.Y) ? (isBottomOpen ? (isRightOpen ? borderStyle.Cross : borderStyle.RightMiddleCorner) : (isRightOpen ? borderStyle.BottomMiddleCorner : borderStyle.BottomRightCorner)) : borderStyle.RightSide)) : ((y <= 0) ? borderStyle.TopSide : (((y + 1) >= size.Y) ? borderStyle.BottomSide : ' ')));
+                BufferCell cell = new BufferCell((x <= 0) ? ((y <= 0) ? (isTopOpen ? (isLeftOpen ? borderStyle.Cross : borderStyle.LeftMiddleCorner) : (isLeftOpen ? borderStyle.TopMiddleCorner : borderStyle.TopLeftCorner)) : (((y + 1) >= rectangle.Height) ? (isBottomOpen ? (isLeftOpen ? borderStyle.Cross : borderStyle.LeftMiddleCorner) : (isLeftOpen ? borderStyle.BottomMiddleCorner : borderStyle.BottomLeftCorner)) : borderStyle.LeftSide)) : (((x + 1) >= rectangle.Width) ? ((y <= 0) ? (isTopOpen ? (isRightOpen ? borderStyle.Cross : borderStyle.RightMiddleCorner) : (isRightOpen ? borderStyle.TopMiddleCorner : borderStyle.TopRightCorner)) : (((y + 1) >= rectangle.Height) ? (isBottomOpen ? (isRightOpen ? borderStyle.Cross : borderStyle.RightMiddleCorner) : (isRightOpen ? borderStyle.BottomMiddleCorner : borderStyle.BottomRightCorner)) : borderStyle.RightSide)) : ((y <= 0) ? borderStyle.TopSide : (((y + 1) >= rectangle.Height) ? borderStyle.BottomSide : ' '))), foregroundColor, backgroundColor);
+                if ((cell.Character != BufferCell.empty.Character) || (!allowTransparency))
+                {
+                    buffer[rectangle.X + x, rectangle.Y + y] = cell;
+                }
             });
         }
 
@@ -250,50 +265,54 @@ namespace FastConsoleUI
         /// <param name="cellsAlignment">Cells alignment</param>
         /// <param name="foregroundColor">Foreground color</param>
         /// <param name="backgroundColor">Background color</param>
+        /// <param name="allowTransparency">Allow transparency</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void WriteCells(IReadOnlyList<BufferCell> cells, ETextAlignment cellsAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void WriteCells(IReadOnlyList<BufferCell> cells, ETextAlignment cellsAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool allowTransparency, BufferCell[,] buffer, RectInt rectangle)
         {
-            BufferCell cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, size, (x, y) =>
+            BufferCell empty_cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), rectangle, (x, y) =>
             {
                 bool show = true;
                 int index = x;
                 switch (cellsAlignment)
                 {
                     case ETextAlignment.TopCenter:
-                        index = x - ((size.X - cells.Count) / 2);
+                        index = x - ((rectangle.Width - cells.Count) / 2);
                         show = (y == 0);
                         break;
                     case ETextAlignment.TopRight:
-                        index = x - (size.X - cells.Count);
+                        index = x - (rectangle.Width - cells.Count);
                         show = (y == 0);
                         break;
                     case ETextAlignment.CenterLeft:
-                        show = (y == (size.Y / 2));
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.Center:
-                        index = x - ((size.X - cells.Count) / 2);
-                        show = (y == (size.Y / 2));
+                        index = x - ((rectangle.Width - cells.Count) / 2);
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.CenterRight:
-                        index = x - (size.X - cells.Count);
-                        show = (y == (size.Y / 2));
+                        index = x - (rectangle.Width - cells.Count);
+                        show = (y == (rectangle.Height / 2));
                         break;
                     case ETextAlignment.BottomLeft:
-                        show = (y == (size.Y - 1));
+                        show = (y == (rectangle.Height - 1));
                         break;
                     case ETextAlignment.BottomCenter:
-                        index = x - ((size.X - cells.Count) / 2);
-                        show = (y == (size.Y - 1));
+                        index = x - ((rectangle.Width - cells.Count) / 2);
+                        show = (y == (rectangle.Height - 1));
                         break;
                     case ETextAlignment.BottomRight:
-                        index = x - (size.X - cells.Count);
-                        show = (y == (size.Y - 1));
+                        index = x - (rectangle.Width - cells.Count);
+                        show = (y == (rectangle.Height - 1));
                         break;
                 }
-                buffer[position.X + x, position.Y + y] = (show ? (((index < 0) || (index >= cells.Count)) ? cell : cells[index]) : cell);
+                BufferCell cell = (show ? (((index < 0) || (index >= cells.Count)) ? empty_cell : cells[index]) : empty_cell);
+                if ((cell.Character != BufferCell.empty.Character) || (!allowTransparency))
+                {
+                    buffer[rectangle.X + x, rectangle.Y + y] = cell;
+                }
             });
         }
 
@@ -304,13 +323,13 @@ namespace FastConsoleUI
         /// <param name="textAlignment">Text alignment</param>
         /// <param name="foregroundColor">Foreground color</param>
         /// <param name="backgroundColor">Background color</param>
+        /// <param name="allowTransparency">Allow transparency</param>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Position</param>
-        /// <param name="size">Size</param>
-        internal static void WriteCellsLines(IReadOnlyList<IReadOnlyList<BufferCell>> cellsLines, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, BufferCell[,] buffer, Vector2Int position, Vector2Int size)
+        /// <param name="rectangle">Rectangle</param>
+        internal static void WriteCellsLines(IReadOnlyList<IReadOnlyList<BufferCell>> cellsLines, ETextAlignment textAlignment, ConsoleColor foregroundColor, ConsoleColor backgroundColor, bool allowTransparency, BufferCell[,] buffer, RectInt rectangle)
         {
-            BufferCell cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
-            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), position, size, (x, y) =>
+            BufferCell empty_cell = new BufferCell(BufferCell.empty.Character, foregroundColor, backgroundColor);
+            For(new Vector2Int(buffer.GetLength(0), buffer.GetLength(1)), rectangle, (x, y) =>
             {
                 int row = y;
                 int index = x;
@@ -325,13 +344,13 @@ namespace FastConsoleUI
                     case ETextAlignment.CenterLeft:
                     case ETextAlignment.Center:
                     case ETextAlignment.CenterRight:
-                        row = y - ((size.Y - cellsLines.Count) / 2);
+                        row = y - ((rectangle.Height - cellsLines.Count) / 2);
                         cells = (((row < 0) || (row >= cellsLines.Count)) ? Array.Empty<BufferCell>() : ((cellsLines[row] == null) ? Array.Empty<BufferCell>() : cellsLines[row]));
                         break;
                     case ETextAlignment.BottomLeft:
                     case ETextAlignment.BottomCenter:
                     case ETextAlignment.BottomRight:
-                        row = y - (size.Y - cellsLines.Count);
+                        row = y - (rectangle.Height - cellsLines.Count);
                         cells = (((row < 0) || (row >= cellsLines.Count)) ? Array.Empty<BufferCell>() : ((cellsLines[row] == null) ? Array.Empty<BufferCell>() : cellsLines[row]));
                         break;
                 }
@@ -340,15 +359,19 @@ namespace FastConsoleUI
                     case ETextAlignment.TopCenter:
                     case ETextAlignment.Center:
                     case ETextAlignment.BottomCenter:
-                        index = x - ((size.X - cells.Count) / 2);
+                        index = x - ((rectangle.Width - cells.Count) / 2);
                         break;
                     case ETextAlignment.TopRight:
                     case ETextAlignment.CenterRight:
                     case ETextAlignment.BottomRight:
-                        index = x - (size.X - cells.Count);
+                        index = x - (rectangle.Width - cells.Count);
                         break;
                 }
-                buffer[position.X + x, position.Y + y] = (((index < 0) || (index >= cells.Count)) ? cell : cells[index]);
+                BufferCell cell = (((index < 0) || (index >= cells.Count)) ? empty_cell : cells[index]);
+                if ((cell.Character != BufferCell.empty.Character) || (!allowTransparency))
+                {
+                    buffer[rectangle.X + x, rectangle.Y + y] = cell;
+                }
             });
         }
 

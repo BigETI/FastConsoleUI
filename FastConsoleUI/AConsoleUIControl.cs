@@ -24,14 +24,63 @@ namespace FastConsoleUI
         public IConsoleUI Parent { get; private set; }
 
         /// <summary>
+        /// Rectangle
+        /// </summary>
+        public override RectInt Rectangle { get; set; }
+
+        /// <summary>
         /// Position
         /// </summary>
-        public override Vector2Int Position { get; set; }
+        public override Vector2Int Position
+        {
+            get => Rectangle.Position;
+            set => Rectangle = new RectInt(value, Rectangle.Size);
+        }
 
         /// <summary>
         /// Size
         /// </summary>
-        public override Vector2Int Size { get; set; }
+        public override Vector2Int Size
+        {
+            get => Rectangle.Size;
+            set => Rectangle = new RectInt(Rectangle.Position, value);
+        }
+
+        /// <summary>
+        /// X
+        /// </summary>
+        public override int X
+        {
+            get => Position.X;
+            set => Position = new Vector2Int(value, Position.Y);
+        }
+
+        /// <summary>
+        /// Y
+        /// </summary>
+        public override int Y
+        {
+            get => Position.Y;
+            set => Position = new Vector2Int(Position.X, value);
+        }
+
+        /// <summary>
+        /// Width
+        /// </summary>
+        public override int Width
+        {
+            get => Size.X;
+            set => Size = new Vector2Int(value, Size.Y);
+        }
+
+        /// <summary>
+        /// Height
+        /// </summary>
+        public override int Height
+        {
+            get => Size.Y;
+            set => Size = new Vector2Int(Size.X, value);
+        }
 
         /// <summary>
         /// Is visible
@@ -52,6 +101,11 @@ namespace FastConsoleUI
         }
 
         /// <summary>
+        /// Allow transparency
+        /// </summary>
+        public bool AllowTransparency { get; set; }
+
+        /// <summary>
         /// Text alignment
         /// </summary>
         public ETextAlignment TextAlignment { get; set; } = ETextAlignment.TopLeft;
@@ -69,8 +123,7 @@ namespace FastConsoleUI
         /// Write to buffer
         /// </summary>
         /// <param name="buffer">Buffer</param>
-        /// <param name="position">Poition</param>
-        /// <param name="size">Size</param>
-        public abstract void WriteToBuffer(BufferCell[,] buffer, Vector2Int position, Vector2Int size);
+        /// <param name="rectangle">Rectangle</param>
+        public abstract void WriteToBuffer(BufferCell[,] buffer, RectInt rectangle);
     }
 }
